@@ -128,7 +128,7 @@ matrixTeX(Mass,'%10.4e','r')
 % Following loop adds local matrices of each element to form Global
 % Matrix.
 
-
+%function for stiffness
 function stif(Stiffness_storey)
 Number_of_storeys=4;
 for  storey_i = 1:Number_of_storeys
