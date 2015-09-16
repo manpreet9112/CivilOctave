@@ -53,6 +53,38 @@ Omega = sqrt(Omega_square);
 	end
 end
 
+function [Modal_contribution,Modal_participation_factor,Modal_mass]= modal(Mass, Eigen_vector)
+Number_of_storeys=4;
+sum_modal_mass = 0;
+	for index_k = 1 : Number_of_storeys
+	  sum_W_Phi = 0;
+	  sum_W_Phi2 = 0;
+       		for index_i = 1 : Number_of_storeys
+          		sum_W_Phi = sum_W_Phi + Mass(index_i, index_i) * ...
+         		 Eigen_vector(index_i, index_k);
+         		 sum_W_Phi2 = sum_W_Phi2 + Mass(index_i, index_i) * ...
+         		 Eigen_vector(index_i, index_k)^2;
+      		end
+        end
+Modal_participation_factor(index_k,1) = sum_W_Phi / sum_W_Phi2;
+Modal_mass(index_k,1) = (sum_W_Phi^2) / (sum_W_Phi2);
+sum_modal_mass = sum_modal_mass + Modal_mass(index_k,1);  
+
+Modal_contribution = 100 / sum_modal_mass * Modal_mass;
+
+ModesContributionX = 0;
+Number_of_modes_to_be_considered = 0;
+
+for Number_of_modes_to_be_considered = 1:Number_of_storeys
+	ModesContributionX = ModesContributionX + ...
+	    Modal_contribution(Number_of_modes_to_be_considered); 
+ 
+	  if (ModesContributionX > 90)
+	    break;
+	  endif
+end
+end
+
 
 %Soil_type
 Type_of_soil = '';
@@ -145,13 +177,28 @@ disp(Frequency);
 [Eigen_vector, Omega_square] = eig(Stiffness_matrix, Mass);
 disp(sprintf ('Eigen_vector:\t'));
 disp(Eigen_vector);
+disp(Omega_square);
+[Modal_contribution,Modal_participation_factor,Modal_mass]=modal(Mass, Eigen_vector);
+disp(sprintf ('Mass:\t'));
+disp(Mass);
+disp(sprintf ('Modal_mass:\t'));
+disp(Modal_mass);
+disp(sprintf ('Modal_participation_factor:\t'));
+disp(Modal_participation_factor);
+disp(sprintf ('Modal_contribution:\t'));
+disp(Modal_contribution);
 
 %output of functions in latex form
-matrixTeX(Stiffness_matrix,'%10.4e','r');
-matrixTeX(level,'%10.4e','r');
-matrixTeX(Time_periods,'%10.4e','r');
-matrixTeX(Frequency,'%10.4e','r');
-matrixTeX(Eigen_vector,'%10.4e','r');
+matrixTeX(Stiffness_matrix,'%10.4e','r')
+matrixTeX(level,'%10.4e','r')
+matrixTeX(Time_periods,'%10.4e','r')
+matrixTeX(Frequency,'%10.4e','r')
+matrixTeX(Eigen_vector,'%10.4e','r')
 matrixTeX(Omega_square,'%10.4e','r')
+matrixTeX(Omega_square,'%10.4e','r')
+matrixTeX(Mass,'%10.4e','r')
+matrixTeX(Modal_mass,'%10.4e','r')
+matrixTeX(Modal_participation_factor,'%10.4e','r')
+matrixTeX(Modal_contribution,'%10.4e','r')
 
 
