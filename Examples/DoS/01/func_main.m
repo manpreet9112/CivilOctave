@@ -130,17 +130,28 @@ function matrixTeX(A, fmt, align)
   endif  
 end
 
-%function calling
-Stiffness_matrix=stif(Stiffness_storey);
+%function calling and output
+Stiffness_matrix=stif(Stiffness_storey); 
+disp(sprintf ( 'Stiffness_matrix:\t'));
 disp(Stiffness_matrix);
+disp(sprintf ( 'Level_floor: \t'));
 level=levelf(Height_storey);
 disp(level);
-[Time_periods, Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass);
+disp(sprintf ('Time_periods :\t'));
+[Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass);
 disp(Time_periods);
+disp(sprintf ('Frequency :\t'));
+disp(Frequency);
+[Eigen_vector, Omega_square] = eig(Stiffness_matrix, Mass);
+disp(sprintf ('Eigen_vector:\t'));
+disp(Eigen_vector);
 
-%function output in latex form
+%output of functions in latex form
 matrixTeX(Stiffness_matrix,'%10.4e','r');
 matrixTeX(level,'%10.4e','r');
 matrixTeX(Time_periods,'%10.4e','r');
+matrixTeX(Frequency,'%10.4e','r');
+matrixTeX(Eigen_vector,'%10.4e','r');
+matrixTeX(Omega_square,'%10.4e','r')
 
 
