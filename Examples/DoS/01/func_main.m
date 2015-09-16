@@ -37,7 +37,7 @@ function Level_floor =levelf(Height_storey)
 	end
 end
 
-%function for Modal._mass, MOdal_contribution, Modal_participation_factor
+%function for Time_periods, Frequency, Omega_square.
 function [Time_period, Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass)
 Number_of_storeys=4;
 [Eigen_vector, Omega_square] = eig(Stiffness_matrix, Mass);
@@ -54,6 +54,7 @@ Omega = sqrt(Omega_square);
 	end
 end
 
+%function for Modal._mass, MOdal_contribution, Modal_participation_factor
 function [Modal_participation_factor,Modal_mass,Modal_contribution]=modal(Mass, Eigen_vector,Number_of_storeys)
 sum_modal_mass = 0;
 	for index_k = 1 : Number_of_storeys
@@ -85,6 +86,41 @@ Number_of_modes_to_be_considered = 0;
 end
 
 
+%This function did not give correct result
+function [Sa_by_g,A_h,Design_lateral_force,Peak_shear_force]=shear(Time_periods,Zone_factor,Importance_factor,Mass,
+Eigen_vector,Gravity_acceleration,Response_reduction_factor,Modal_participation_factor)
+	Type_of_soil='';
+        Soil_type=1;	
+	Number_of_storeys=4;
+	for index_time = 1:Number_of_storeys
+  		Sa_by_g(index_time,1) = funSaog(Type_of_soil, Time_periods(index_time,1));
+  		A_h(index_time,1) = Zone_factor / 2 * Importance_factor / ...
+   		 Response_reduction_factor * Sa_by_g(index_time,1);
+	end  
+
+	for index_i = 1:Number_of_storeys
+  		Design_lateral_force(:,index_i) = Mass * Eigen_vector(:,index_i) * A_h(index_i) * ...
+ 		Modal_participation_factor(index_i) * Gravity_acceleration;
+	end
+
+Peak_shear_force = zeros(Number_of_storeys, Number_of_storeys,'double');
+	for index_j = 1:Number_of_storeys
+  		for index_i = 1:Number_of_storeys
+      			for index_k = 1:Number_of_storeys - index_i +1
+     			% index_m = index_k + index_i -1;
+      			Peak_shear_force(index_i,index_j) = ...
+       			 Design_lateral_force(index_k + index_i -1,index_j) + ...
+       			 Peak_shear_force(index_i,index_j);
+        		%index_i
+       			 %index_j
+        		%index_k
+   			 end    
+  		end  
+	end
+end
+
+
+
 
 
 %Soil_type
@@ -98,11 +134,12 @@ end
 
 %% Function to write Matrix
 
-t1 = 0; t2 = 0; t3 = 0; t4 = 0; 
-eq3num = 0;
+%t1 = 0; t2 = 0; t3 = 0; t4 = 0; 
+%eq3num = 0;
 
 function sag = funSaog(soilType, timePrd)
-  t2 = 0.10;
+  t2 = 0.10;t1 = 0; t3 = 0; t4 = 0; 
+eq3num = 0;
   switch soilType
     case 'I' 
       t3 = 0.40; eq3num = 1.0;
@@ -188,6 +225,11 @@ disp(sprintf ('Modal_participation_factor:\t'));
 disp(Modal_participation_factor);
 disp(sprintf ('Modal_contribution:\t'));
 disp(Modal_contribution);
+[Sa_by_g,A_h,Design_lateral_force,Peak_shear_force]=shear(Time_periods,Zone_factor,Importance_factor,Mass,Eigen_vector,Gravity_acceleration,
+Response_reduction_factor,Modal_participation_factor);
+disp(sprintf ('Design_lateral_force:\t'))
+disp(Design_lateral_force);
+
 
 %output of functions in latex form
 matrixTeX(Stiffness_matrix,'%10.4e','r')
@@ -201,5 +243,7 @@ matrixTeX(Mass,'%10.4e','r')
 matrixTeX(Modal_mass,'%10.4e','r')
 matrixTeX(Modal_participation_factor,'%10.4e','r')
 matrixTeX(Modal_contribution,'%10.4e','r')
+matrixTeX(Design_lateral_force,'%10.4e','r')
+
 
 
