@@ -37,6 +37,7 @@ function Level_floor =levelf(Height_storey)
 	end
 end
 
+%function for Modal._mass, MOdal_contribution, Modal_participation_factor
 function [Time_period, Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass)
 Number_of_storeys=4;
 [Eigen_vector, Omega_square] = eig(Stiffness_matrix, Mass);
@@ -53,37 +54,37 @@ Omega = sqrt(Omega_square);
 	end
 end
 
-function [Modal_contribution,Modal_participation_factor,Modal_mass]= modal(Mass, Eigen_vector)
-Number_of_storeys=4;
+function [Modal_participation_factor,Modal_mass,Modal_contribution]=modal(Mass, Eigen_vector,Number_of_storeys)
 sum_modal_mass = 0;
 	for index_k = 1 : Number_of_storeys
-	  sum_W_Phi = 0;
-	  sum_W_Phi2 = 0;
-       		for index_i = 1 : Number_of_storeys
-          		sum_W_Phi = sum_W_Phi + Mass(index_i, index_i) * ...
-         		 Eigen_vector(index_i, index_k);
-         		 sum_W_Phi2 = sum_W_Phi2 + Mass(index_i, index_i) * ...
-         		 Eigen_vector(index_i, index_k)^2;
-      		end
-        end
+  		sum_W_Phi = 0;
+  		sum_W_Phi2 = 0;
+  			for index_i = 1 : Number_of_storeys
+    				sum_W_Phi = sum_W_Phi + Mass(index_i, index_i) * ...
+      				Eigen_vector(index_i, index_k);
+    				sum_W_Phi2 = sum_W_Phi2 + Mass(index_i, index_i) * ...
+      				Eigen_vector(index_i, index_k)^2;
+  			end
 Modal_participation_factor(index_k,1) = sum_W_Phi / sum_W_Phi2;
 Modal_mass(index_k,1) = (sum_W_Phi^2) / (sum_W_Phi2);
 sum_modal_mass = sum_modal_mass + Modal_mass(index_k,1);  
+end
 
 Modal_contribution = 100 / sum_modal_mass * Modal_mass;
 
 ModesContributionX = 0;
 Number_of_modes_to_be_considered = 0;
 
-for Number_of_modes_to_be_considered = 1:Number_of_storeys
-	ModesContributionX = ModesContributionX + ...
-	    Modal_contribution(Number_of_modes_to_be_considered); 
- 
-	  if (ModesContributionX > 90)
-	    break;
-	  endif
+	for Number_of_modes_to_be_considered = 1:Number_of_storeys
+  		ModesContributionX = ModesContributionX + ...
+   		Modal_contribution(Number_of_modes_to_be_considered); 
+ 		  if (ModesContributionX > 90)
+   			 break;
+  		endif
+	end
 end
-end
+
+
 
 
 %Soil_type
