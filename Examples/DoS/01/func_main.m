@@ -37,6 +37,22 @@ function Level_floor =levelf(Height_storey)
 	end
 end
 
+function [Time_period, Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass)
+Number_of_storeys=4;
+[Eigen_vector, Omega_square] = eig(Stiffness_matrix, Mass);
+Omega = sqrt(Omega_square);
+	for storey_i = 1 : Number_of_storeys
+	  Time_period(storey_i, storey_i) = 2 * pi() ...
+	    / sqrt(Omega_square(storey_i, storey_i)); 
+	end
+	for storey_i = 1 : Number_of_storeys
+	  Frequency(storey_i,1) = Omega(storey_i, storey_i);
+	end
+	for storey_i = 1 : Number_of_storeys
+	  Time_periods(storey_i,1) = Time_period(storey_i, storey_i);
+	end
+end
+
 
 %Soil_type
 Type_of_soil = '';
@@ -119,9 +135,12 @@ Stiffness_matrix=stif(Stiffness_storey);
 disp(Stiffness_matrix);
 level=levelf(Height_storey);
 disp(level);
+[Time_periods, Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass);
+disp(Time_periods);
 
 %function output in latex form
 matrixTeX(Stiffness_matrix,'%10.4e','r');
-matrixTeX(level,'%10.4e','r')
+matrixTeX(level,'%10.4e','r');
+matrixTeX(Time_periods,'%10.4e','r');
 
 
