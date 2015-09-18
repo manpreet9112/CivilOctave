@@ -6,7 +6,7 @@ clear
 load input.mat
 
 
-
+%function for stiffness  matrix.
 function Stiffness_matrix =stif(Stiffness_storey)
 	Number_of_storeys=4;
 	for  storey_i = 1:Number_of_storeys
@@ -24,7 +24,7 @@ function Stiffness_matrix =stif(Stiffness_storey)
 	 end
 end
 
-
+%function for level_floor
 function Level_floor =levelf(Height_storey)
 	Number_of_storey=4;
 	for storey_i = 1 : Number_of_storey
@@ -38,6 +38,7 @@ function Level_floor =levelf(Height_storey)
 	end
 end
 
+%function for Frequency, Time_periods
 function [Time_period, Frequency, Time_periods]= eigenomega(Stiffness_matrix, Mass)
 Number_of_storeys=4;
 [Eigen_vector, Omega_square] = eig(Stiffness_matrix, Mass);
@@ -54,6 +55,7 @@ Omega = sqrt(Omega_square);
 	end
 end
 
+%function for Modal_participation_factor,Modal_mass,Modal_contribution.
 function [Modal_participation_factor,Modal_mass,Modal_contribution]=modal(Mass, Eigen_vector,Number_of_storeys)
 sum_modal_mass = 0;
 	for index_k = 1 : Number_of_storeys
@@ -82,16 +84,15 @@ Number_of_modes_to_be_considered = 0;
    			 break;
   		endif
 	end
+	
 end
 
-
+%function for Sa_by_g,A_h,Design_lateral_force,Peak_shear_force.
 function [Sa_by_g,A_h,Design_lateral_force,Peak_shear_force]=Peak_shear(Time_periods,Zone_factor,Importance_factor,
-Mass,Eigen_vector,Gravity_acceleration,Response_reduction_factor,Modal_participation_factor)
-	Type_of_soil='';
-        Soil_type=1;	
+Mass,Eigen_vector,Gravity_acceleration,Response_reduction_factor,Modal_participation_factor,Type_of_soil )
 	Number_of_storeys=4;
 	for index_time = 1:Number_of_storeys
-  		Sa_by_g(index_time,1) = funSaog(Type_of_soil, Time_periods(index_time,1));
+  		Sa_by_g(index_time,1) = funSaog(Type_of_soil , Time_periods(index_time,1));
   		A_h(index_time,1) = Zone_factor / 2 * Importance_factor / ...
    		 Response_reduction_factor * Sa_by_g(index_time,1);
 	end  
@@ -115,17 +116,47 @@ Peak_shear_force = zeros(Number_of_storeys, Number_of_storeys,'double');
    			 end    
   		end  
 	end
+
+end
+
+%function for Storey_shear_force.
+function Storey_shear_force= storey_shear(Peak_shear_force,Modes_considered,Number_of_storeys)	Storey_shear_force = zeros(Number_of_storeys, 3);
+	for index_i = 1:Number_of_storeys
+  		for index_j = 1:Modes_considered
+   	 		Storey_shear_force(index_i,1) = Storey_shear_force(index_i,1) + ...
+   	   		abs(Peak_shear_force(index_i,index_j));
+   	 		Storey_shear_force(index_i,2) = Storey_shear_force(index_i,2) + ...
+   	   		Peak_shear_force(index_i,index_j)^2;
+  		end
+   	Storey_shear_force(index_i,2) = sqrt(Storey_shear_force(index_i,2));
+	end
+end
+
+%% Plot mode shapes
+% saveas(plotHangle, 'ModeShape.eps','eps')
+%print (plotHangle, '-color',  'ModeShape.eps')
+%saveas(plotHangle, 'ModeShape.png','png')
+%saveas(plotHangle, 'ModeShape.pdf')
+
+function [Eigen_vector, level_floor]=plott(Eigen_vector,level_floor,Number_of_storeys)
+	plotHangle = figure('visible', 'off')
+        plot([0; Eigen_vector(:,1)], [0; level_floor],'-ro')
+	hold on
+	plot([0; Eigen_vector(:,2)], [0; level_floor],'-go')
+	plot([0; Eigen_vector(:,3)], [0; level_floor],'-bo')
+	plot([0; Eigen_vector(:,4)], [0; level_floor],'-mo')
+	plot([0 0], [0 level_floor(Number_of_storeys)],'-k')
+	hold off
 end
 
 
 
 
 
-
-Type_of_soil = '';
+Type_of_soil ='';
 
 for i = 1:Soil_type
-  Type_of_soil = strcat(Type_of_soil, 'I');
+ Type_of_soil = strcat(Type_of_soil, 'I');
 end
 
 %% Function to write Matrix
@@ -135,7 +166,7 @@ end
 
 
 function sag = funSaog(soilType, timePrd)
-    t2=0.10;t1 = 0; t3 = 0; t4 = 0; 
+    t2=0.10;t1 = 0;t3 = 0; t4 = 0; 
 eq3num = 0;
     switch soilType
     case 'I' 
@@ -223,12 +254,18 @@ disp(sprintf ('Modal_participation_factor:\t'))
 disp(Modal_participation_factor);
 disp(sprintf ('Modal_contribution:\t'))
 disp(Modal_contribution);
-[Sa_by_g,A_h,Design_lateral_force,Peak_shear_force]=Peak_shear(Time_periods,Zone_factor,Importance_factor,Mass,Eigen_vector,
-Gravity_acceleration,Response_reduction_factor,Modal_participation_factor);
+[Sa_by_g,A_h,Design_lateral_force,Peak_shear_force]=Peak_shear(Time_periods,Zone_factor,Importance_factor,Mass,Eigen_vector,Gravity_acceleration,Response_reduction_factor,Modal_participation_factor,Type_of_soil)
 disp(sprintf ('Sa_by_g:\t'))
 disp(Sa_by_g);
 disp(sprintf ('Design_lateral_force:\t'))
 disp(Design_lateral_force);
+disp(' ')
+disp(['g = ', num2str(Gravity_acceleration)])
+Storey_shear_force= storey_shear(Peak_shear_force,Modes_considered,Number_of_storeys)
+disp('Storey_shear_force')
+disp(Storey_shear_force);
+[Eigen_vector, level_floor]=plott(Eigen_vector,level_floor,Number_of_storeys)
+
 
 
 %output of functions in latex form
@@ -246,12 +283,7 @@ matrixTeX(Sa_by_g,'%10.4e','r')
 matrixTeX(A_h,'%10.4e','r')
 matrixTeX(Design_lateral_force,'%10.4e','r')
 matrixTeX(Peak_shear_force,'%10.4e','r')
+matrixTeX(Storey_shear_force,'%10.4e','r')
 
-
-
-% saveas(plotHangle, 'ModeShape.eps','eps')
-%print (plotHangle, '-color',  'ModeShape.eps')
-%saveas(plotHangle, 'ModeShape.png','png')
-%saveas(plotHangle, 'ModeShape.pdf')
 
 % End of file
